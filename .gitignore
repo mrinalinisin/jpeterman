@@ -1,0 +1,11 @@
+# transient / local-only
+*.log
+.claude/
+.DS_Store
+
+# redundant secondary crawl output (drawings-only duplicate)
+output-drawings/
+
+# stray initial test downloads at repo root
+flamenco-1.jpg
+flamenco-2.jpg

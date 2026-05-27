@@ -1,0 +1,3 @@
+# The Pallavi | Handmade Leather Pencil Case - Leather Makeup Bag
+
+A leather case that is not only stylish but also practical. The Pallavi is a perfect combination of style and practicality.  Our leather pencil case is an elegant way to store your makeup and accessories. It is handmade by skilled craftsmen in our workshop, using only the best Full Grain Crazy Horse leather. The Pallavi Leather Pencil Case is built to last. It has a sturdy YKK zipper in front, as well as a sleek design that makes carrying it on the go easy. This handy case can be used as a pencil case or even a stylish purse accessory that will look great on any kind of outfit.
