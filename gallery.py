@@ -22,6 +22,8 @@ from pathlib import Path
 
 IMG_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 BATCH = 12  # cards revealed per "Show me more" click
+# Shopify serves every product at /products/<handle>; our folder name IS the handle.
+PRODUCT_BASE = "https://jpeterman.com/products"
 
 
 def parse_story(md_path: Path):
@@ -52,8 +54,10 @@ def build_record(folder: Path, out_dir: Path):
         return None
     title, paras = parse_story(story_md)
     srcs = [os.path.relpath(img, out_dir) for img in images]
-    # keys kept short to keep the embedded JSON small: t=title, s=story, i=images
-    return {"t": title, "s": paras, "i": srcs}
+    url = f"{PRODUCT_BASE}/{folder.name}"
+    # keys kept short to keep the embedded JSON small:
+    # t=title, s=story, i=images, u=original listing url
+    return {"t": title, "s": paras, "i": srcs, "u": url}
 
 
 PAGE = """<!DOCTYPE html>
@@ -95,11 +99,26 @@ PAGE = """<!DOCTYPE html>
   @media (max-width: 850px)  {{ .gallery {{ column-count: 2; }} }}
   @media (max-width: 560px)  {{ .gallery {{ column-count: 1; }} }}
   .card {{
+    display: block;
     break-inside: avoid;
     background: #fff;
     border: 1px solid var(--rule);
     margin: 0 0 1.5rem;
     box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: box-shadow .2s ease, transform .2s ease;
+  }}
+  .card:hover {{ box-shadow: 0 7px 24px rgba(0,0,0,.14); transform: translateY(-2px); }}
+  .card:visited {{ color: inherit; }}
+  .view {{
+    display: block;
+    margin-top: .9rem;
+    font-size: .78rem;
+    font-style: italic;
+    color: var(--accent);
+    opacity: .75;
   }}
   .art {{ position: relative; background: #fff; padding: 1rem 1rem 0; }}
   .art img {{ display: block; width: 100%; height: auto; }}
@@ -165,9 +184,31 @@ const moreBtn = document.getElementById('more');
 const countEl = document.getElementById('count');
 let shown = 0;
 
+// Open a URL in a background tab. A plain click can't be forced into the
+// background, so we synthesize a Cmd/Ctrl-click, which browsers honor by
+// opening a new tab without moving focus.
+function openBackgroundTab(url) {{
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.dispatchEvent(new MouseEvent('click', {{
+    bubbles: true, cancelable: true, ctrlKey: true, metaKey: true
+  }}));
+}}
+
 function makeCard(p) {{
-  const card = document.createElement('article');
+  const card = document.createElement('a');
   card.className = 'card';
+  card.href = p.u;                 // real link: middle-click / "open in new tab" work natively
+  card.target = '_blank';
+  card.rel = 'noopener';
+  card.addEventListener('click', function (e) {{
+    // let the browser handle modified or non-left clicks natively
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    openBackgroundTab(p.u);
+  }});
 
   const art = document.createElement('div');
   art.className = 'art' + (p.i.length > 1 ? ' has-flip' : '');
@@ -199,6 +240,11 @@ function makeCard(p) {{
     story.appendChild(el);
   }});
   body.appendChild(story);
+
+  const view = document.createElement('span');
+  view.className = 'view';
+  view.textContent = 'View on jpeterman.com \\u2197';
+  body.appendChild(view);
 
   card.appendChild(art);
   card.appendChild(body);
